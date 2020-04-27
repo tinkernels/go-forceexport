@@ -2,6 +2,7 @@ package forceexport
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"runtime"
 	"testing"
@@ -73,6 +74,33 @@ func TestInvalidFunc(t *testing.T) {
 	}
 	if invalidFunc != nil {
 		t.Error("Expected a nil function.")
+	}
+}
+
+func TestResolveFromHostsFile(t *testing.T){
+	var lookupStaticHost func (string)[]string
+	err := GetFunc(&lookupStaticHost, "net.lookupStaticHost")
+	if err != nil {
+		// Handle errors if you care about name possibly being invalid.
+		t.Log("Can't get func: ", "net.lookupStaticHost")
+	}
+
+	localhostStr := "localhost"
+	ipsReal, _ := net.LookupHost(localhostStr)
+	t.Log("resolved localhost to: ", ipsReal)
+
+	ips := lookupStaticHost(localhostStr)
+
+	for _, ip := range ipsReal{
+		ret := false
+		for _, ip2test := range ips{
+			if ip == ip2test{
+				ret = true
+			}
+		}
+		if !ret{
+			t.Error("localhost ip must be resolved to isn't resolved:", ip)
+		}
 	}
 }
 
